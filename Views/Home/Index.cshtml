@@ -1,0 +1,214 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+@*@Html.DropDownList("ddlist", ViewBag.ddlistname as SelectList, "Please Select Day")*@
+@Html.Label("Select any day: ")
+@Html.DropDownList("ddlist", ViewBag.ddlistname as SelectList, "Please Select Day")
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Highchart js -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+
+    @* Spline Chart *@
+    <script>
+        $(document).ready(function () {
+            $('#ddlist').on("change", function () {
+                DayWiseTotalCases();
+            });
+        });
+
+    function DayWiseTotalCases() {
+        var param = {};
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("GetTempratureDetails","Home")',
+            data: { param: $("#ddlist").val() },
+            dataType: "json",
+            success: function (data) {
+
+                createDayWiseCountryData(data);
+            },
+            error: function () {
+                console.log('Error');
+            }
+        });
+    }
+
+    function createDayWiseCountryData(data) {
+        var degree = [];
+        var hour = [];
+
+        for (var i = 0; i < data.length; i++) {
+            hour.push(parseFloat(data[i].hour));
+            degree.push(parseFloat(data[i].degree));
+        }
+
+        Highcharts.chart('container', {
+          chart: {
+            type: 'spline'
+          },
+          title: {
+            text: 'Daily Temperature'
+          },
+          subtitle: {
+            text: 'Source: WorldClimate.com'
+          },
+            xAxis: {
+                title: {
+                    text: 'Time'
+                },
+                labels: {
+                    formatter: function () {
+                        return this.value + ':00';
+                    }
+                },
+            categories: hour
+          },
+          yAxis: {
+            title: {
+              text: 'Temperature'
+            },
+            labels: {
+              formatter: function () {
+                return this.value + '°';
+              }
+            }
+          },
+          plotOptions: {
+            spline: {
+              marker: {
+                radius: 4,
+                lineColor: '#666666',
+                lineWidth: 1
+              }
+            }
+          },
+          series: [{
+            name: 'Temprature',
+            data: degree
+          }]
+        });
+    }
+    </script>
+
+    @* Column Chart *@
+    <script>
+        $(document).ready(function () {
+            $('#ddlist').on("change", function () {
+                WindDetails();
+            });
+        });
+
+        function WindDetails() {
+            var param = {};
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("GetWindDetails","Home")',
+                data: { param: $("#ddlist").val() },
+                dataType: "json",
+                success: function (data) {
+                    console.log(data);
+                    createDayWiseWindDetails(data);
+                },
+                error: function () {
+                    console.log('Error');
+                }
+            });
+        }
+
+    function createDayWiseWindDetails(data) {
+        var hour = [];
+        var wind = [];
+
+        for (var i = 0; i < data.length; i++) {
+            hour.push(parseFloat(data[i].hour));
+            wind.push(parseInt(data[i].wind));
+        }
+
+        Highcharts.chart('container2', {
+          chart: {
+            type: 'column'
+          },
+          title: {
+            text: 'Daily Wind'
+          },
+          subtitle: {
+            text: 'Source: WorldClimate.com'
+          },
+            xAxis: {
+                title: {
+                    text: 'Time'
+                },
+                labels: {
+                    formatter: function () {
+                        return this.value + ':00';
+                    }
+                },
+            categories: hour
+          },
+          yAxis: {
+            title: {
+              text: 'Wind'
+            },
+            labels: {
+              formatter: function () {
+                return this.value + 'km/h';
+              }
+            }
+          },
+          plotOptions: {
+            spline: {
+              marker: {
+                radius: 4,
+                lineColor: '#666666',
+                lineWidth: 1
+              }
+            }
+          },
+          series: [{
+            name: 'Wind',
+            data: wind
+          }]
+        });
+    }
+    </script>
+
+    <style>
+        .shadow {
+            border: 1px solid;
+            padding: 10px;
+            box-shadow: 5px 10px 15px 15px black;
+        }
+    </style>
+
+</head>
+<body style="background-image: url(/Content/images/featured-image-2@2x.jpg)">
+    
+    <div id="container"></div>
+    <div id="container2"></div>
+    
+    <br />
+
+    <div class="jumbotron text-center row bg-danger shadow">
+
+        <div class="col-md-2">
+            <img src="~/Content/images/logo@2x.png" class="img-fluid rounded mx-auto d-block img-responsive" />
+        </div>
+
+        <div class="col-md-10 text-center">
+            <p class='text-center'><b><h3 class='text-center'>Welcome to Weather Forecast, select the day from above list to get graphical view of weekly temprature and wind speed !!!</h3></b></p>
+        </div>
+        
+    </div>
+
+    <div class="shadow">
+        <img src='~/Content/images/Weather_BG.jpg' class='img-fluid rounded mx-auto d-block img-thumbnail img-responsive' width="100%">
+    </div>
+
+    @Scripts.Render("~/bundles/bootstrap")
+</body>
+</html>
